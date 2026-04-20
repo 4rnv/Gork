@@ -1,6 +1,4 @@
 from typing import Literal, NotRequired, Any, TypedDict, get_args, get_origin
-import sys
-import logging
 
 class GorkSchema:
     def __init__(self, schema) -> None:
@@ -34,8 +32,8 @@ def is_this_true(response : Any, schema : GorkSchema):
             result['is_valid'] = False
             result['error'] += f'Type {type(value)} does not match {expected_type} in field {field}\n'
             continue
-        if options.get('min') or options.get('max'):
-            range_is_valid, range_error = _check_range(value, options)
+        if 'min' in options or 'max' in options:
+            range_is_valid, range_error = _check_range(value, options, field)
             if not range_is_valid:
                 result['is_valid'] = range_is_valid
                 result['error'] += range_error + "\n"
@@ -43,8 +41,9 @@ def is_this_true(response : Any, schema : GorkSchema):
                 print(f'Field {field} passed all checks for value "{value}"')
         else:
             print(f'Field {field} passed all checks for value "{value}"')
-    if result['error']:
-        raise GorkError(f"Validation Failed:\n{result['error']}")
+    print(result['error'])
+    # if result['error']:
+    #     raise GorkError(f"Validation Failed:\n{result['error']}")
     return result
 
 def validate(response : Any, schema : GorkSchema):
@@ -76,13 +75,11 @@ def _type_matches(value: Any, expected: Any) -> bool:
 
     return isinstance(value, expected) if isinstance(expected, type) else True
 
-def _check_range(value : tuple[int, float], options: dict):
-    if not isinstance(value, options.get('type')):
-        return False, f'Expected {options.get('type')}, got {type(value)}'
+def _check_range(value : int | float, options: dict, field : str):
     if isinstance(value, (int, float)):
         if 'min' in options and value < options['min']:
-            return False, f'Value {value} < min {options['min']}'
+            return False, f'Value {value} < min {options['min']} for field {field}'
         if 'max' in options and value > options['max']:
-            return False, f'Value {value} > max {options['max']}'
+            return False, f'Value {value} > max {options['max']} for field {field}'
     return True, ''
     
