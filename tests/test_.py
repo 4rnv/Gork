@@ -19,6 +19,21 @@ def test_valid_input():
     result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is True
 
+def test_valid_input_with_missing_field_but_required_false():
+    schema = gork.GorkSchema({
+    'answer': {"type": str},
+    'confidence': {"type": float, "min": 0, "max": 1},
+    'subject': {"type": Literal['physics','chemistry','mathematics']},
+    'id': {"type": int, "required": False}
+    })
+    response = {
+        'answer': 'Correct answer',
+        'confidence': 0.87,
+        'subject': 'physics',
+    }
+    result = gork.is_this_true(response, schema, raise_on_error=False)
+    assert result['is_valid'] is True
+
 
 def test_missing_field():
     response = {

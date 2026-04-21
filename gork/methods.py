@@ -11,9 +11,11 @@ def is_this_true(response : Any, schema : GorkSchema, raise_on_error : bool = Tr
     }
     for field, options in schema.schema.items():
         expected_type = options.get('type')
+        required = options.get('required', True)
         if field not in response:
-            result['is_valid'] = False
-            result['error'] += f'\nField {field} missing'
+            if required:
+                result['is_valid'] = False
+                result['error'] += f'\nField {field} missing'
             continue
         value = response[field]
         if not _type_matches(value, expected_type):
