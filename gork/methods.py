@@ -1,19 +1,7 @@
-from typing import Literal, NotRequired, Any, TypedDict, get_args, get_origin
+from typing import Literal, Any, get_args, get_origin
+from gork.classes import GorkSchema, GorkError, GorkResponse
 
-class GorkSchema:
-    def __init__(self, schema) -> None:
-        self.schema = schema
-
-class GorkError(Exception):
-    def __init__(self, message: str, field: str | None = None) -> None:
-        self.field = field
-        super().__init__(message)
-
-class GorkResponse(TypedDict):
-    error : NotRequired[str]
-    is_valid : bool
-
-def is_this_true(response : Any, schema : GorkSchema):
+def is_this_true(response : Any, schema : GorkSchema, raise_on_error : bool = True):
     '''
     Validates response against provided schema.
     '''
@@ -25,25 +13,25 @@ def is_this_true(response : Any, schema : GorkSchema):
         expected_type = options.get('type')
         if field not in response:
             result['is_valid'] = False
-            result['error'] += f'Field {field} missing\n'
+            result['error'] += f'\nField {field} missing'
             continue
         value = response[field]
         if not _type_matches(value, expected_type):
             result['is_valid'] = False
-            result['error'] += f'Type {type(value)} does not match {expected_type} in field {field}\n'
+            result['error'] += f'\nType {type(value)} does not match {expected_type} in field {field}'
             continue
         if 'min' in options or 'max' in options:
             range_is_valid, range_error = _check_range(value, options, field)
             if not range_is_valid:
                 result['is_valid'] = range_is_valid
-                result['error'] += range_error + "\n"
+                result['error'] += '\n' + range_error
             else:
-                print(f'Field {field} passed all checks for value "{value}"')
+                print(f'\nField {field} passed all checks for value "{value}"')
         else:
-            print(f'Field {field} passed all checks for value "{value}"')
+            print(f'\nField {field} passed all checks for value "{value}"')
     print(result['error'])
-    # if result['error']:
-    #     raise GorkError(f"Validation Failed:\n{result['error']}")
+    if result['error'] and raise_on_error:
+        raise GorkError(f"Validation Failed:\n{result['error']}")
     return result
 
 def validate(response : Any, schema : GorkSchema):

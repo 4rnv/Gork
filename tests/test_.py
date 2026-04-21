@@ -1,5 +1,4 @@
-# import pytest
-import index as gork
+import gork
 from typing import Literal
 
 schema = gork.GorkSchema({
@@ -17,7 +16,7 @@ def test_valid_input():
         'subject': 'physics',
         'id': 42
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is True
 
 
@@ -27,7 +26,7 @@ def test_missing_field():
         'confidence': 0.5,
         'subject': 'physics'
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
     assert 'id' in result['error']
 
@@ -39,7 +38,7 @@ def test_wrong_type():
         'subject': 'physics',
         'id': "not_an_int"
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
     assert 'int' in result['error']
 
@@ -51,7 +50,7 @@ def test_range_violation():
         'subject': 'chemistry',
         'id': 1
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
     assert 'range' in result['error'] or '>' in result['error']
 
@@ -63,7 +62,7 @@ def test_literal_invalid():
         'subject': 'biology',
         'id': 1
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
     assert 'Literal' in result['error'] or 'does not match' in result['error']
 
@@ -75,7 +74,7 @@ def test_multiple_errors():
         'subject': 'invalid',         # literal fail
         'id': "wrong"                 # wrong type
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
 
     # ensure multiple errors are reported
@@ -93,11 +92,11 @@ def test_boundary_values():
         'subject': 'mathematics',
         'id': 0
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is True
 
     response['confidence'] = 1
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is True
 
 
@@ -109,12 +108,12 @@ def test_extra_fields_ignored():
         'id': 10,
         'extra': 'ignored'
     }
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is True
 
 
 def test_empty_response():
     response = {}
-    result = gork.is_this_true(response, schema)
+    result = gork.is_this_true(response, schema, raise_on_error=False)
     assert result['is_valid'] is False
     assert 'missing' in result['error'].lower()
